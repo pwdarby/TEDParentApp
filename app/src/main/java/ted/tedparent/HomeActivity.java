@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.widget.TextView;
+import android.widget.*;
 
 import com.amazonaws.auth.CognitoCachingCredentialsProvider;
 import com.amazonaws.regions.Regions;
@@ -21,17 +22,26 @@ public class HomeActivity extends AppCompatActivity implements AsyncResponse {
     TextView topicBox;
     TextView languageBox;
 
+    private ListView mDrawerList;
+    private ArrayAdapter<String> mAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
+        // Populate topic and language boxes
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         topicBox = (TextView) findViewById(R.id.CurrTopic);
         languageBox = (TextView) findViewById(R.id.CurrLang);
-
         updateFields();
+
+
+        // SideDrawer Update
+        mDrawerList = (ListView)findViewById(R.id.navList);
+        addDrawerItems();
+
     }
 
     public void updateFields() {
@@ -53,6 +63,12 @@ public class HomeActivity extends AppCompatActivity implements AsyncResponse {
 
         }
 
+    }
+
+    private void addDrawerItems() {
+        String[] osArray = { "Home", "Statistics", "Accounts", "Settings" };
+        mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
+        mDrawerList.setAdapter(mAdapter);
     }
 
     public void processFinish(Metrics output){
