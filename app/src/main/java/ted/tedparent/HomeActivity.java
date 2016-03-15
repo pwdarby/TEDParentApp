@@ -1,5 +1,6 @@
 package ted.tedparent;
 
+import android.content.res.Configuration;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -8,7 +9,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.widget.TextView;
 import android.widget.*;
-
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v4.widget.DrawerLayout;
+import android.view.View;
+import android.view.MenuItem;
 import com.amazonaws.auth.CognitoCachingCredentialsProvider;
 import com.amazonaws.regions.Regions;
 
@@ -22,8 +26,12 @@ public class HomeActivity extends AppCompatActivity implements AsyncResponse {
     TextView topicBox;
     TextView languageBox;
 
+    // Navigation Drawer Variables
     private ListView mDrawerList;
     private ArrayAdapter<String> mAdapter;
+    private ActionBarDrawerToggle mDrawerToggle;
+    private DrawerLayout mDrawerLayout;
+    private String mActivityTitle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,9 +46,13 @@ public class HomeActivity extends AppCompatActivity implements AsyncResponse {
         updateFields();
 
 
-        // SideDrawer Update
+        // Navigation Drawer Setup
         mDrawerList = (ListView)findViewById(R.id.navList);
         addDrawerItems();
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
+        mDrawerLayout = (DrawerLayout)findViewById(R.id.drawer_layout);
+        mActivityTitle = getTitle().toString();
 
     }
 
@@ -55,13 +67,18 @@ public class HomeActivity extends AppCompatActivity implements AsyncResponse {
                     Regions.US_EAST_1 // Region
             );
 
-
-
             BearStateUpdate myMapper = new BearStateUpdate(credentialsProvider);
             myMapper.delegate = this;
             myMapper.execute();
 
         }
+    }
+
+
+    public void processFinish(Metrics output){
+
+        topicBox.append(output.getTopic());
+        languageBox.append(output.getLanguage());
 
     }
 
@@ -71,18 +88,63 @@ public class HomeActivity extends AppCompatActivity implements AsyncResponse {
         mDrawerList.setAdapter(mAdapter);
     }
 
-    public void processFinish(Metrics output){
+    private void setupDrawer() {
+        // Initialize mDrawerToggle
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
+                R.string.drawer_open, R.string.drawer_close) {
 
-        topicBox.append(output.getTopic());
-        languageBox.append(output.getLanguage());
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                getSupportActionBar().setTitle("Navigation!");
+                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+            }
+
+            public void onDrawerClosed(View view) {
+                super.onDrawerClosed(view);
+                getSupportActionBar().setTitle(mActivityTitle);
+                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+            }
+        };
+
+        mDrawerToggle.setDrawerIndicatorEnabled(true);
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
 
     }
+
 
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+
+        // Activate the navigation drawer toggle
+        if (mDrawerToggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        mDrawerToggle.syncState();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
 }
